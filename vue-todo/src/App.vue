@@ -16,6 +16,7 @@
             :key="index"
             :todoItem="todoItem"
             :index="index"
+            @toggle="toggleTodoItemComplete"
             @remove="removeTodoItem"
           ></TodoListItem>
         </ul>
@@ -42,12 +43,19 @@ const storage = {
   },
 };
 
+export interface Todo {
+  title: string;
+  complete: boolean;
+  index?: number;
+}
+
 export default Vue.extend({
   components: { TodoInput, TodoListItem },
   data() {
     return {
       todoText: "",
-      todoItems: [] as any[],
+      // vue에서는 타입 정의 데이터 초기화 할때 as를 사용해서 이니셜라이징을 한다
+      todoItems: [] as Todo[],
     };
   },
   methods: {
@@ -59,7 +67,12 @@ export default Vue.extend({
       if (value.length <= 0) {
         return;
       }
-      this.todoItems.push(value);
+      /*
+      const todo: Todo = { title: value, complete: false, };
+      this.todoItems.push(todo);
+      */
+      this.todoItems.push({ title: value, complete: false });
+
       storage.save(this.todoItems);
       // localStorage.setItem(value, value);
       this.initTodoText();
@@ -73,6 +86,16 @@ export default Vue.extend({
     },
     removeTodoItem(index: number) {
       this.todoItems.splice(index, 1);
+      storage.save(this.todoItems);
+    },
+    toggleTodoItemComplete(value: Todo) {
+      if (typeof value.index === "undefined") {
+        return;
+      }
+      this.todoItems.splice(value.index, 1, {
+        title: value.title,
+        complete: !value.complete,
+      });
       storage.save(this.todoItems);
     },
   },
